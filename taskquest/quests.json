@@ -1,6 +1,17 @@
 [
   {
     "titulo": "Limpar o porão de ratos gigantes",
-    "recompensa": "20 Moedas de Prata"
+    "recompensa": "20 Moedas de Prata",
+    "concluirQuest": true
+  },
+  {
+    "titulo": "Minerar a caverna em busca de materiais.",
+    "recompensa": "1000 moedas de ouro!",
+    "concluida": true
+  },
+  {
+    "titulo": "Explorar os bosques demoníacos",
+    "recompensa": "100 moedas de Prata",
+    "concluido": true
   }
 ]

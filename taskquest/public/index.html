@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RPG</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <form>
+      <h1>Cadastre seu Item:</h1>
+      <br />
+      <label for="nome">Nome: </label>
+      <input type="text" name="nome" id="nomeItem" required /><br />
+
+      <label for="raridade">Raridade: </label>
+      <input type="text" name="raridade" id="raridadeItem" required /><br />
+
+      <button type="button" id="btnAdicionar">Enviar/Adicionar</button>
+    </form>
+
+    <div id="listaItems"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
