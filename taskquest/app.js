@@ -17,7 +17,7 @@ app.post("/quests", questController.adicionarQuest);
 
 app.delete("/quests", questController.deletarQuest);
 
-app.put("/quests", questController.alterarQuest);
+app.put("/quests/:id", questController.alterarQuest);
 app.patch("/quests", questController.alterarQuest);
 
 app.listen(3000, () => {

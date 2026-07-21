@@ -1,14 +1,10 @@
 [
   {
-    "nome": "Espada de obsidian",
-    "raridade": "Épico"
-  },
-  {
-    "nome": "Escudo",
+    "nome": "Espada de ouro",
     "raridade": "comum"
   },
   {
-    "recompensa": "100 moedas de Prata",
+    "nome": "200 moedas de ouro",
     "raridade": "raro"
   }
 ]

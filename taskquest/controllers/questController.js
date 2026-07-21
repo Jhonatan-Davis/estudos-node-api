@@ -14,8 +14,10 @@ const adicionarQuest = (req, res) => {
   const recompensaQuest = req.body.recompensa;
 
   const novaQuest = {
+    id: Date.now(),
     titulo: tituloQuest,
     recompensa: recompensaQuest,
+    concluido: false,
   };
   const dadosAtuais = fs.readFileSync(caminhoArquivo, "utf8");
   const guildaQuests = JSON.parse(dadosAtuais);
@@ -48,6 +50,7 @@ const deletarQuest = (req, res) => {
 };
 
 const alterarQuest = (req, res) => {
+  const { id } = req.params;
   const alterarTitulo = req.body.titulo;
   const novoTitulo = req.body.novoTitulo;
   const novaRecompensa = req.body.novaRecompensa;
@@ -64,38 +67,50 @@ const alterarQuest = (req, res) => {
   const guildaQuest = JSON.parse(dadosAtuais);
 
   const questEncontrada = guildaQuest.find(
-    (quest) => quest.titulo === alterarTitulo,
+    (quest) => String(quest.id) === String(id),
   );
 
   if (questEncontrada) {
-    if (concluirQuest) {
-      questEncontrada.concluido = true;
+    if (concluirQuest !== undefined) {
+      questEncontrada.concluido = !questEncontrada.concluido;
+      if (questEncontrada.concluido === true) {
+        const dadosItems = fs.readFileSync(caminhoItem, "utf-8");
+        const guildaItem = JSON.parse(dadosItems);
+        const nomeDaRecompensa = questEncontrada.recompensa;
 
-      const dadosItems = fs.readFileSync(caminhoItem, "utf-8");
-      const guildaItem = JSON.parse(dadosItems);
-      const nomeDaRecompensa = questEncontrada.recompensa;
+        const novoItem = {
+          nome: nomeDaRecompensa,
+          raridade: "raro",
+        };
+        guildaItem.push(novoItem);
+        fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
 
-      const novoItem = {
-        recompensa: nomeDaRecompensa,
-        raridade: "raro",
-      };
-      guildaItem.push(novoItem);
-      fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
+        mensagem += `\n O status da Quest de título ${alterarTitulo}, foi alterado para concluído e a sua recompensa já foi adicionada ao seu inventário!`;
+      } else {
+        const dadosItems = fs.readFileSync(caminhoItem, "utf-8");
+        let guildaItem = JSON.parse(dadosItems);
+        const nomeDaRecompensa = questEncontrada.recompensa;
 
-      mensagem += `\n O status da Quest de título ${alterarTitulo}, foi alterado para concluído e a sua recompensa já foi adicionada ao seu inventário!`;
+        guildaItem = guildaItem.filter(
+          (item) => item.recompensa !== nomeDaRecompensa,
+        );
+
+        fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
+        mensagem += `\n A Quest de título "${alterarTitulo}" foi marcada como pendente.`;
+      }
+
+      if (novoTitulo) {
+        questEncontrada.titulo = novoTitulo;
+        mensagem += `\n O título mudou para "${novoTitulo}".`;
+      }
+      if (novaRecompensa) {
+        questEncontrada.recompensa = novaRecompensa;
+        mensagem += `\n A recompensa mudou para "${novaRecompensa}".`;
+      }
+      fs.writeFileSync(caminhoArquivo, JSON.stringify(guildaQuest, null, 2));
+    } else {
+      mensagem += `\n Não foi possível encontrar a Quest!`;
     }
-
-    if (novoTitulo) {
-      questEncontrada.titulo = novoTitulo;
-      mensagem += `\n O título mudou para "${novoTitulo}".`;
-    }
-    if (novaRecompensa) {
-      questEncontrada.recompensa = novaRecompensa;
-      mensagem += `\n A recompensa mudou para "${novaRecompensa}".`;
-    }
-    fs.writeFileSync(caminhoArquivo, JSON.stringify(guildaQuest, null, 2));
-  } else {
-    mensagem += `\n Não foi possível alterar a Quest!`;
   }
 
   res.send(mensagem);

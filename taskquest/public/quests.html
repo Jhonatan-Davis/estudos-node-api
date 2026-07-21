@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Quests</title>
+  </head>
+  <body>
+    <header>
+      <h1 class="tituloHeader">RPG DO JOTA</h1>
+      <a href="index.html">Inventário</a>
+    </header>
+    <form>
+      <h1>Cadastre sua Quest:</h1>
+
+      <label for="tituloQuest">Título da quest:</label>
+      <input type="text" id="inputTitulo" />
+
+      <label for="recompensa">Recompensa:</label>
+      <input type="text" name="recompensa" id="inputRecompensa" />
+
+      <button type="button" id="btnCadastrar">Cadastrar</button>
+    </form>
+
+    <div id="listaQuests"></div>
+
+    <script src="/js/scriptQuest.js"></script>
+  </body>
+</html>
