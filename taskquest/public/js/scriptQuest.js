@@ -10,16 +10,20 @@ async function listarQuests() {
   lista.innerHTML = "";
 
   dados.forEach((quest) => {
-    const elementoNovo = document.createElement("p");
+    const elementoNovo = document.createElement("div");
+    elementoNovo.classList.add("quest-card");
+
+    const divConteudo = document.createElement("div");
+    divConteudo.classList.add("quest-conteudo");
+
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.style.marginRight = "15px";
+    checkbox.checked = quest.concluido;
 
     const textoQuest = document.createElement("span");
     textoQuest.innerText = `${quest.titulo} - Recompensa: ${quest.recompensa}`;
 
     if (quest.concluido) {
-      checkbox.checked = true;
       textoQuest.style.textDecoration = "line-through";
       textoQuest.style.opacity = "0.6";
       checkbox.style.accentColor = "#c8aa6e";
@@ -34,7 +38,7 @@ async function listarQuests() {
         },
         body: JSON.stringify({
           titulo: quest.titulo,
-          concluido: true,
+          concluido: checkbox.checked,
         }),
       });
 
@@ -44,8 +48,39 @@ async function listarQuests() {
       listarQuests();
     });
 
-    elementoNovo.appendChild(checkbox);
-    elementoNovo.appendChild(textoQuest);
+    divConteudo.appendChild(checkbox);
+    divConteudo.appendChild(textoQuest);
+
+    const btnDeletar = document.createElement("button");
+    btnDeletar.classList.add("btn-deletar");
+
+    const iconeLixeira = document.createElement("i");
+    iconeLixeira.className = "bi bi-trash";
+
+    btnDeletar.appendChild(iconeLixeira);
+
+    btnDeletar.addEventListener("click", async () => {
+      if (confirm(`Deseja realmente excluir a quest "${quest.titulo}"?`)) {
+        const resposta = await fetch("http://localhost:3000/quests", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            titulo: quest.titulo,
+          }),
+        });
+
+        const mensagem = await resposta.text();
+        alert(mensagem);
+
+        listarQuests();
+      }
+    });
+
+    elementoNovo.appendChild(divConteudo);
+    elementoNovo.appendChild(btnDeletar);
+
     lista.appendChild(elementoNovo);
   });
 }
@@ -59,7 +94,7 @@ async function adicionarQuest() {
   const resposta = await fetch("http://localhost:3000/quests", {
     method: "POST",
     headers: {
-      "Content-type": "application/json",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       titulo: tituloDigitado,
@@ -74,4 +109,7 @@ async function adicionarQuest() {
   recompensaQuest.value = "";
   listarQuests();
 }
-botaoCadastro.addEventListener("click", adicionarQuest);
+
+if (botaoCadastro) {
+  botaoCadastro.addEventListener("click", adicionarQuest);
+}

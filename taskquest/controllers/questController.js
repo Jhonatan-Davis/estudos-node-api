@@ -92,7 +92,7 @@ const alterarQuest = (req, res) => {
         const nomeDaRecompensa = questEncontrada.recompensa;
 
         guildaItem = guildaItem.filter(
-          (item) => item.recompensa !== nomeDaRecompensa,
+          (item) => item.nome !== nomeDaRecompensa,
         );
 
         fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
