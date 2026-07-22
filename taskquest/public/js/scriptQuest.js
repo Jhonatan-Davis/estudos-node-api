@@ -43,7 +43,6 @@ async function listarQuests() {
       });
 
       const mensagem = await resposta.text();
-      alert(mensagem);
 
       listarQuests();
     });
@@ -103,7 +102,6 @@ async function adicionarQuest() {
   });
 
   const mensagemDoServidor = await resposta.text();
-  alert(mensagemDoServidor);
 
   tituloQuest.value = "";
   recompensaQuest.value = "";
