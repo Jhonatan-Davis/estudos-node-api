@@ -1,119 +1,112 @@
-const fs = require("fs");
-const caminhoItem = "./items.json";
-const caminhoArquivo = "./quests.json";
+const { getDb } = require("../database.js");
 
-const listarQuests = (req, res) => {
-  const dadosArquivo = fs.readFileSync(caminhoArquivo, "utf-8");
-
-  const guildaQuests = JSON.parse(dadosArquivo);
-  res.json(guildaQuests);
+const listarQuests = async (req, res) => {
+  try {
+    const db = getDb();
+    const quests = await db.all("SELECT * FROM quests");
+    res.json(quests);
+  } catch (error) {
+    console.error("ERRO REAL DO SQLITE: ", error);
+    res.status(500).send(`Erro interno: ${error.message}`);
+  }
 };
 
-const adicionarQuest = (req, res) => {
-  const tituloQuest = req.body.titulo;
-  const recompensaQuest = req.body.recompensa;
+const adicionarQuest = async (req, res) => {
+  try {
+    const db = getDb();
+    const { titulo, recompensa } = req.body;
 
-  const novaQuest = {
-    id: Date.now(),
-    titulo: tituloQuest,
-    recompensa: recompensaQuest,
-    concluido: false,
-  };
-  const dadosAtuais = fs.readFileSync(caminhoArquivo, "utf8");
-  const guildaQuests = JSON.parse(dadosAtuais);
-
-  if (!tituloQuest || !recompensaQuest) {
-    return res.send(
-      `Por favor Adicione um titulo e uma recompensa para essa Quest!!`,
+    const adicionar = await db.run(
+      `
+      INSERT INTO quests (titulo, recompensa) VALUES (?, ?)`,
+      [titulo, recompensa],
     );
+
+    res.status(201).send("Quest cadastrada com sucesso!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Erro ao inserir os dados");
   }
-  guildaQuests.push(novaQuest);
-
-  fs.writeFileSync(caminhoArquivo, JSON.stringify(guildaQuests, null, 2));
-
-  res.send(`Foi adicionada a nova Quest na lista de Quests com o titúlo de
-     ${tituloQuest}, com a recompensa de ${recompensaQuest} `);
 };
 
-const deletarQuest = (req, res) => {
-  const deletarTitulo = req.body.titulo;
-  const dadosAtuais = fs.readFileSync(caminhoArquivo, "utf-8");
-  const guildaQuest = JSON.parse(dadosAtuais);
+const deletarQuest = async (req, res) => {
+  try {
+    const db = getDb();
+    const id = Number(req.params.id);
 
-  const listaAtualizada = guildaQuest.filter(
-    (quest) => quest.titulo !== deletarTitulo,
-  );
-
-  fs.writeFileSync(caminhoArquivo, JSON.stringify(listaAtualizada, null, 2));
-
-  res.send(`A quest "${deletarTitulo}" foi removida com sucesso da guilda!`);
-};
-
-const alterarQuest = (req, res) => {
-  const { id } = req.params;
-  const alterarTitulo = req.body.titulo;
-  const novoTitulo = req.body.novoTitulo;
-  const novaRecompensa = req.body.novaRecompensa;
-  const concluirQuest = req.body.concluido;
-  let mensagem = "";
-
-  const alterarQuest = {
-    novoTitulo: novoTitulo,
-    novaRecompensa: novaRecompensa,
-    concluido: concluirQuest,
-  };
-
-  const dadosAtuais = fs.readFileSync(caminhoArquivo, "utf-8");
-  const guildaQuest = JSON.parse(dadosAtuais);
-
-  const questEncontrada = guildaQuest.find(
-    (quest) => String(quest.id) === String(id),
-  );
-
-  if (questEncontrada) {
-    if (concluirQuest !== undefined) {
-      questEncontrada.concluido = !questEncontrada.concluido;
-      if (questEncontrada.concluido === true) {
-        const dadosItems = fs.readFileSync(caminhoItem, "utf-8");
-        const guildaItem = JSON.parse(dadosItems);
-        const nomeDaRecompensa = questEncontrada.recompensa;
-
-        const novoItem = {
-          nome: nomeDaRecompensa,
-          raridade: "raro",
-        };
-        guildaItem.push(novoItem);
-        fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
-
-        mensagem += `\n O status da Quest de título ${alterarTitulo}, foi alterado para concluído e a sua recompensa já foi adicionada ao seu inventário!`;
-      } else {
-        const dadosItems = fs.readFileSync(caminhoItem, "utf-8");
-        let guildaItem = JSON.parse(dadosItems);
-        const nomeDaRecompensa = questEncontrada.recompensa;
-
-        guildaItem = guildaItem.filter(
-          (item) => item.nome !== nomeDaRecompensa,
-        );
-
-        fs.writeFileSync(caminhoItem, JSON.stringify(guildaItem, null, 2));
-        mensagem += `\n A Quest de título "${alterarTitulo}" foi marcada como pendente.`;
-      }
-
-      if (novoTitulo) {
-        questEncontrada.titulo = novoTitulo;
-        mensagem += `\n O título mudou para "${novoTitulo}".`;
-      }
-      if (novaRecompensa) {
-        questEncontrada.recompensa = novaRecompensa;
-        mensagem += `\n A recompensa mudou para "${novaRecompensa}".`;
-      }
-      fs.writeFileSync(caminhoArquivo, JSON.stringify(guildaQuest, null, 2));
-    } else {
-      mensagem += `\n Não foi possível encontrar a Quest!`;
+    if (isNaN(id)) {
+      return res.status(400).send("ID inválido fornecido.");
     }
-  }
 
-  res.send(mensagem);
+    const resultado = await db.run("DELETE FROM quests WHERE id = ?", [id]);
+
+    if (resultado.changes === 0) {
+      return res.status(404).send(`Nenhuma quest encontrada com o ID ${id}.`);
+    }
+
+    res.status(200).send("Quest excluida com sucesso!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Não foi possível apagar a quest!");
+  }
+};
+
+const alterarQuest = async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    const { titulo } = req.body;
+    const questAntiga = await db.get("SELECT * FROM quests WHERE id = ?", [id]);
+
+    if (!questAntiga) {
+      return res.status(404).send("Quest não encontrada!");
+    }
+
+    const novoTitulo = titulo !== undefined ? titulo : questAntiga.titulo;
+    const novaRecompensa =
+      recompensa !== undefined ? recompensa : questAntiga.recompensa;
+
+    let novoConcluido;
+    if (concluido !== undefined) {
+      novoConcluido = concluido ? 1 : 0;
+    } else {
+      novoConcluido = questAntiga.concluido;
+    }
+
+    await db.run(
+      `
+      UPDATE quests SET titulo = ?, recompensa = ?, concluido = ? WHERE id =?`,
+      [novoTitulo, novaRecompensa, novoConcluido, id],
+    );
+
+    res.status(200).send(`Quest atualizada com sucesso!`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(`Erro interno ao atualizar`);
+  }
+};
+
+const alternarStatusQuest = async (req, res) => {
+  try {
+    const db = getDb();
+    const { id } = req.params;
+    const { concluido } = req.body;
+    const statusNumerico = concluido ? 1 : 0;
+
+    const resultado = await db.run(
+      `UPDATE quests SET concluido = ? WHERE id = ?`,
+      [statusNumerico, id],
+    );
+
+    if (resultado.changes === 0) {
+      return res.status(404).send("Quest não encontrada.");
+    }
+
+    res.status(200).send("Status da quest atualizado com sucesso!");
+  } catch (error) {
+    console.error("Erro ao alternar status da quest:", error);
+    res.status(500).send("Erro interno ao alterar o status.");
+  }
 };
 
 module.exports = {
@@ -121,4 +114,5 @@ module.exports = {
   adicionarQuest,
   deletarQuest,
   alterarQuest,
+  alternarStatusQuest,
 };

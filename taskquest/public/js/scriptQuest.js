@@ -18,7 +18,7 @@ async function listarQuests() {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = quest.concluido;
+    checkbox.checked = quest.concluido === 1 || quest.concluido === true;
 
     const textoQuest = document.createElement("span");
     textoQuest.innerText = `${quest.titulo} - Recompensa: ${quest.recompensa}`;
@@ -31,20 +31,26 @@ async function listarQuests() {
     }
 
     checkbox.addEventListener("change", async () => {
-      const resposta = await fetch(`http://localhost:3000/quests/${quest.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          titulo: quest.titulo,
-          concluido: checkbox.checked,
-        }),
-      });
+      try {
+        await fetch(`http://localhost:3000/quests/${quest.id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            concluido: checkbox.checked,
+          }),
+        });
 
-      const mensagem = await resposta.text();
+        if (!resposta.ok) {
+          console.error("Erro na resposta da API:", resposta.statusText);
+          return;
+        }
 
-      listarQuests();
+        listarQuests();
+      } catch (error) {
+        console.error("Erro ao atualizar o status da quest:", error);
+      }
     });
 
     divConteudo.appendChild(checkbox);
@@ -59,21 +65,19 @@ async function listarQuests() {
     btnDeletar.appendChild(iconeLixeira);
 
     btnDeletar.addEventListener("click", async () => {
-      if (confirm(`Deseja realmente excluir a quest "${quest.titulo}"?`)) {
-        const resposta = await fetch("http://localhost:3000/quests", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            titulo: quest.titulo,
-          }),
-        });
+      if (confirm(`Deseja realmente excluir a quest "${quest.id}"?`)) {
+        try {
+          const resposta = await fetch(
+            `http://localhost:3000/quests/${quest.id}`,
+            {
+              method: "DELETE",
+            },
+          );
 
-        const mensagem = await resposta.text();
-        alert(mensagem);
-
-        listarQuests();
+          listarQuests();
+        } catch (error) {
+          console.error("Erro ao deletar quest:", error);
+        }
       }
     });
 
