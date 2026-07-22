@@ -18,9 +18,7 @@ app.patch("/items/:id", itemController.alterarItem);
 
 app.get("/quests", questController.listarQuests);
 app.post("/quests", questController.adicionarQuest);
-
 app.delete("/quests/:id", questController.deletarQuest);
-
 app.put("/quests/:id/status", questController.alternarStatusQuest);
 app.patch("/quests/:id/status", questController.alternarStatusQuest);
 

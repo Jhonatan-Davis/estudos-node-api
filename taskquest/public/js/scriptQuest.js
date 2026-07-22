@@ -104,9 +104,6 @@ async function adicionarQuest() {
       recompensa: recompensaDigitada,
     }),
   });
-
-  const mensagemDoServidor = await resposta.text();
-
   tituloQuest.value = "";
   recompensaQuest.value = "";
   listarQuests();

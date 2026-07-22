@@ -38,6 +38,8 @@ async function initDb() {
     nome_item TEXT NOT NULL,
     raridade TEXT NOT NULL,
     usuario_id INTEGER,
+    quests_id INTEGER,
+    FOREIGN KEY (quests_id) REFERENCES inventario(id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     )
     `);

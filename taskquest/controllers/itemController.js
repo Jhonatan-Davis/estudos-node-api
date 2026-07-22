@@ -1,79 +1,74 @@
-const fs = require("fs");
-const { parse } = require("path");
-const caminhoDados = "./items.json";
+const { getDb } = require("../database.js");
 
-const listarItems = (req, res) => {
-  const arquivosDados = fs.readFileSync(caminhoDados, "utf-8");
-  const guildaItems = JSON.parse(arquivosDados);
-
-  res.json(guildaItems);
-};
-
-const receberItems = (req, res) => {
-  const nomeItem = req.body.nome;
-  const raridadeItem = req.body.raridade;
-  const novoItem = {
-    nome: nomeItem,
-    raridade: raridadeItem,
-  };
-
-  const arquivosDados = fs.readFileSync(caminhoDados, "utf-8");
-  const guildaItems = JSON.parse(arquivosDados);
-
-  if (!nomeItem || !raridadeItem) {
-    return res.send(`Cadastre o nome e a raridade do item ao inventário`);
+const listarItems = async (req, res) => {
+  try {
+    const db = getDb();
+    const lista = await db.all("SELECT * FROM inventario");
+    res.json(lista);
+  } catch (error) {
+    console.error("Erro interno SQLite: ", error);
+    res.status(500).send("Erro interno do servidor!");
   }
-  guildaItems.push(novoItem);
-  fs.writeFileSync(caminhoDados, JSON.stringify(guildaItems, null, 2));
-
-  res.send(
-    `Você adicionou com sucesso, ${nomeItem} de raridade: "${raridadeItem}" ao seu inventário!`,
-  );
 };
 
-const deletarItem = (req, res) => {
-  const itemDeletado = req.body.nome;
+const receberItems = async (req, res) => {
+  try {
+    const db = getDb();
+    const { nome, raridade } = req.body;
+    const adicionar = await db.run(
+      `
+    INSERT INTO inventario (nome_item, raridade) VALUES (?, ?)`,
+      [nome, raridade],
+    );
 
-  const arquivosDados = fs.readFileSync(caminhoDados, "utf-8");
-  const guildaItems = JSON.parse(arquivosDados);
-
-  const listaAtualizada = guildaItems.filter(
-    (items) => items.nome != itemDeletado,
-  );
-  fs.writeFileSync(caminhoDados, JSON.stringify(listaAtualizada, null, 2));
-  res.send(`O item ${itemDeletado} foi deletado com sucesso!`);
-};
-
-const alterarItem = (req, res) => {
-  const nome = req.body.nome;
-  const novoNome = req.body.novoNome;
-  const novaRaridade = req.body.novaRaridade;
-  let mensagem = "";
-
-  const arquivosDados = fs.readFileSync(caminhoDados, "utf-8");
-  const guildaItems = JSON.parse(arquivosDados);
-
-  const alterarItem = {
-    novoNome: novoNome,
-    novaRaridade: novaRaridade,
-  };
-
-  const itemEncontrado = guildaItems.find((items) => items.nome === nome);
-
-  if (itemEncontrado) {
-    if (novoNome) {
-      itemEncontrado.nome = novoNome;
-      mensagem += `\n O nome do item foi alterado para ${novoNome}`;
-    }
-    if (novaRaridade) {
-      itemEncontrado.raridade = novaRaridade;
-      mensagem += `\n A raridade do item foi alterada para ${novaRaridade}`;
-    }
-    fs.writeFileSync(caminhoDados, JSON.stringify(guildaItems, null, 2));
-  } else {
-    mensagem += `Não foi possível encontrar o item selecionado, ${nome}`;
+    res.status(201).send("Item adicionado ao inventario!!");
+  } catch (error) {
+    console.error("Erro interno SQLite: ", error);
+    res.status(500).send("Erro interno do servidor!");
   }
-  res.send(mensagem);
+};
+
+const deletarItem = async (req, res) => {
+  try {
+    const db = getDb();
+    const id = Number(req.params.id);
+    const deletar = await db.run(`DELETE FROM inventario WHERE id = ?`, [id]);
+
+    res.status(200).send("O item foi deletado com sucesso!");
+  } catch (error) {
+    console.error("Erro interno SQLite: ", error);
+    res.status(500).send("Erro interno do servidor!");
+  }
+};
+
+const alterarItem = async (req, res) => {
+  try {
+    const db = getDb();
+    const id = Number(req.params.id);
+    const { nome, raridade } = req.body;
+    const itemAntigo = await db.get("SELECT * FROM inventario WHERE id = ?", [
+      id,
+    ]);
+
+    if (!itemAntigo) {
+      return res.status(404).send("Item não encontrado!");
+    }
+
+    const novoNome = nome !== undefined ? nome : itemAntigo.nome;
+    const novaRaridade =
+      raridade !== undefined ? raridade : itemAntigo.raridade;
+
+    const alterar = await db.run(
+      `
+      UPDATE inventario SET nome_item = ?, raridade = ? WHERE id = ?`,
+      [novoNome, novaRaridade, id],
+    );
+
+    res.status(200).send("O item foi alterado com sucesso no inventário!");
+  } catch (error) {
+    console.error("Erro interno SQLite: ", error);
+    res.status(500).send("Erro interno do servidor!");
+  }
 };
 
 module.exports = {
