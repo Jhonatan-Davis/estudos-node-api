@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastrar</title>
+    <link rel="stylesheet" href="login.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
+  <body>
+    <form action="" id="formCadastro">
+      <a href="login.html" class="link-voltar" title="Voltar para o login">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <h2>Faça o seu cadastro</h2>
+
+      <label for="nome">Nome: </label>
+      <input type="text" name="nome" id="inputName" />
+
+      <label for="telefone">Telefone:</label>
+      <input type="number" name="telefone" id="inputTelefone" />
+
+      <label for="email">Email: </label>
+      <input type="email" name="email" id="email" />
+
+      <label for="senha">Senha: </label>
+      <input type="password" name="senha" id="senha" />
+
+      <label for="confirmarSenha">Confirmar Senha: </label>
+      <input type="password" name="confirmarSenha" id="confirmarSenha" />
+
+      <button type="submit" id="btn-entrar">Entrar</button>
+    </form>
+    <script src="cadastro.js"></script>
+  </body>
+</html>
