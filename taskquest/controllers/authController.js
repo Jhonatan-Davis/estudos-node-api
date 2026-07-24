@@ -45,19 +45,43 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Preencha e-mail e senha!" });
     }
 
+    if (!req.session.tentativas) {
+      req.session.tentativas = 0;
+    }
+
+    if (req.session.tentativas >= 5) {
+      return res.status(429).json({
+        message: "Usuário bloqueado por muitas tentativas inválidas!",
+      });
+    }
+
     const usuario = await db.get("SELECT * FROM usuarios WHERE email = ?", [
       email,
     ]);
 
     if (!usuario) {
+      req.session.tentativas += 1;
       return res.status(401).json({ message: "E-mail ou senha incorretos!" });
     }
 
     const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
     if (!senhaValida) {
-      return res.status(401).json({ message: "E-mail ou senha incorretos!" });
+      req.session.tentativas += 1;
+
+      const restantes = 5 - req.session.tentativas;
+      if (restantes <= 0) {
+        return res.status(429).json({
+          message: "Usuário bloqueado por muitas tentativas inválidas!",
+        });
+      }
+
+      return res.status(401).json({
+        message: `E-mail ou senha incorretos! Restam ${restantes} tentativas.`,
+      });
     }
+
+    req.session.tentativas = 0;
 
     req.session.usuario = {
       id: usuario.id,
