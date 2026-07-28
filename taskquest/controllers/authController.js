@@ -1,5 +1,22 @@
 const bcrypt = require("bcrypt");
+const { enviarEmailAutenticacao } = require("./transporter/emailTransporter");
 const { getDb } = require("../database.js");
+const { generateAcessToken } = require("../utils/jwt.js");
+
+async function solicitarAcesso(req, res) {
+  const { email } = req.body;
+
+  const acesstoken = generateAcessToken({ email: email });
+
+  try {
+    await enviarEmailAutenticacao(email, acesstoken);
+    res
+      .status(200)
+      .json({ message: "Link de acesso enviado para o seu e-mail!" });
+  } catch (error) {
+    res.status(500).json({ message: "Erro ao enviar e-mail." });
+  }
+}
 
 const cadastro = async (req, res) => {
   try {
